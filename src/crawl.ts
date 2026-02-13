@@ -1,11 +1,13 @@
 import { getURLsFromHTML } from "./helpers"
 
-export function normalizeURL(url: string): string {
+export function normalizeURL(url: string): string  {
   const parsedUrl = new URL(url);
   const pathname = parsedUrl.pathname.endsWith("/") ? parsedUrl.pathname.slice(0, -1) : parsedUrl.pathname;
-  return `${parsedUrl.hostname}${pathname}`;
+  if (!/^[a-zA-Z0-9.-]+$/.test(parsedUrl.hostname)) {
+throw new Error(`Invalid hostname: ${parsedUrl.hostname}`);
 }
-   
+  return `${parsedUrl.hostname}${pathname}`;
+}  
 export async function getHTML(url: string) {
    try {
        let finalUrl = url
@@ -34,6 +36,7 @@ export async function getHTML(url: string) {
 }
 
 export async function crawlPage(baseURL: string, currentURL: string = baseURL, pages: Record<string, number> = {}){
+   if(!URL.canParse(currentURL)) return pages
       const baseHost = new URL(baseURL).hostname
       const curretHost = new URL(currentURL).hostname
       if(baseHost !== curretHost) return pages
