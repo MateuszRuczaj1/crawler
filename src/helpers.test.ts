@@ -1,5 +1,5 @@
 import {expect, test} from 'vitest';
-import { getH1FromHTML,getFirstParagraphFromHTML, getURLsFromHTML } from './helpers';   
+import { getH1FromHTML,getFirstParagraphFromHTML, getURLsFromHTML, getImagesFromHTML } from './helpers';   
 test("getH1FromHTML basic", () => {
   const inputBody = `<html><body><h1>Test Title</h1></body></html>`;
   const actual = getH1FromHTML(inputBody);
@@ -85,5 +85,55 @@ test("getURLsFromHTML should keep absolute links unchanged", () => {
   </html>`
   const expected = ["https://google.com/slug/1"]
    const actual = getURLsFromHTML(inputBody,inputURL)
+  expect(actual).toEqual(expected)
+})
+test("getImagesFromHTML should return all urls", () => {
+  const inputURL = "https://google.com"
+  const inputBody = `<html>
+   <body>
+     <p>Paragraph</p>
+     <img src="/logo.png" />
+     <img src="/logo2.png" />
+   </body>
+  </html>`
+  const expected = ["https://google.com/logo.png", "https://google.com/logo2.png"]
+  const actual = getImagesFromHTML(inputBody, inputURL)
+  expect(actual).toEqual(expected)
+})
+test("getImagesFromHTML should return an absolute url", () => {
+  const inputURL = "https://google.com"
+  const inputBody = `<html>
+   <body>
+     <p>Paragraph</p>
+     <img src="/slug/1">Hello</a>
+   </body>
+  </html>`
+  const expected = ["https://google.com/slug/1"]
+  const actual = getImagesFromHTML(inputBody,inputURL)
+  expect(actual).toEqual(expected)
+})
+test("getImagesFromHTML should ignore links without href", () => {
+  const inputURL = "https://google.com"
+  const inputBody = `<html>
+   <body>
+     <img src="/slug/1">Valid</img>
+     <img>No src</img>
+   </body>
+  </html>`
+  const expected = ["https://google.com/slug/1"]
+  const actual = getImagesFromHTML(inputBody,inputURL)
+  expect(actual).toEqual(expected)
+  
+})
+test("getImagesFromHTML should keep absolute links unchanged", () => {
+  const inputURL = "https://google.com"
+  const inputBody = `<html>
+   <body>
+     <img src="https://google.com/slug/1">Valid</img>
+
+   </body>
+  </html>`
+  const expected = ["https://google.com/slug/1"]
+   const actual = getImagesFromHTML(inputBody,inputURL)
   expect(actual).toEqual(expected)
 })
