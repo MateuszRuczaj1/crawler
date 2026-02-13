@@ -1,5 +1,5 @@
-
-function main(){
+import { getHTML } from "./crawl"
+async function main(){
   const argv = process.argv
   const CLI_args = argv.slice(2)
   argv.forEach((val, index) => {
@@ -11,6 +11,7 @@ function main(){
   }
   else{
      console.log("Crawler is starting with URL: ", CLI_args[0])
+      await getHTML(CLI_args[0])
      process.exit(0)
   }
 }
