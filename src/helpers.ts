@@ -39,3 +39,23 @@ export function getURLsFromHTML(html:string, baseURL: string): string[] | undefi
     })
     return links
 }
+export function getImagesFromHTML(html: string, baseURL: string): string[]{
+    const dom = new JSDOM(html)
+    const imgs = dom.window.document.querySelectorAll("img")
+    if(!imgs) return []
+    const imgLinks: string[] = []
+    imgs.forEach((img) => {
+        if(img.hasAttribute("src")){
+            const src = img.getAttribute("src")
+            if(src?.startsWith(baseURL)){
+                imgLinks.push(src)
+            }
+            else{
+                const absoluteUrl = `${baseURL}${src}`
+                imgLinks.push(absoluteUrl)
+
+            }
+        }
+    })
+    return imgLinks
+}
