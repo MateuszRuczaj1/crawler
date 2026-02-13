@@ -1,28 +1,24 @@
+import { getURLsFromHTML } from "./helpers"
 
-export function normalizeURL(url: string): string{
-   
-     if(URL.canParse(url)){
-        const parsedUrl = new URL(url)
-        let normalizedPathname
-        if(parsedUrl.pathname.endsWith("/")){
-            normalizedPathname = parsedUrl.pathname.slice(0,-1)
-        }
-        const normalizedString = `${parsedUrl.hostname}${normalizedPathname}`
-        return normalizedString
-     }
-     else {
-        throw Error("Cannot parse that url - not valid")
-     }
-     
-   }
+export function normalizeURL(url: string): string {
+  const parsedUrl = new URL(url);
+  const pathname = parsedUrl.pathname.endsWith("/") ? parsedUrl.pathname.slice(0, -1) : parsedUrl.pathname;
+  return `${parsedUrl.hostname}${pathname}`;
+}
    
 export async function getHTML(url: string) {
    try {
-      const response = await fetch(url,{
+       let finalUrl = url
+      if(!url.startsWith("https://") && !url.startsWith("http://")){
+         finalUrl = `https://${url}`
+      }
+      console.log(`[crawler] fetching: ${finalUrl}`)
+      const response = await fetch(finalUrl,{
       headers:{
          "User-Agent": "Spider-Man"
       }
    })
+   console.log(`[crawler] response: ${response.status} ${response.statusText} (${finalUrl})`)
    
    if(response.status >= 400){
       throw new Error("Error getting page content")
