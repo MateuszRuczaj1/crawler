@@ -1,5 +1,5 @@
 import {expect, test} from 'vitest';
-import { getH1FromHTML,getFirstParagraphFromHTML } from './helpers';   
+import { getH1FromHTML,getFirstParagraphFromHTML, getURLsFromHTML } from './helpers';   
 test("getH1FromHTML basic", () => {
   const inputBody = `<html><body><h1>Test Title</h1></body></html>`;
   const actual = getH1FromHTML(inputBody);
@@ -36,4 +36,54 @@ test("return first p", () => {
   const actual = getFirstParagraphFromHTML(inputBody)
   const expected = ""
   expect(actual).toEqual("Example")
+})
+test("getURLsFromHTML should return an absolute url", () => {
+  const inputURL = "https://google.com"
+  const inputBody = `<html>
+   <body>
+     <p>Paragraph</p>
+     <a href="/slug/1">Hello</a>
+   </body>
+  </html>`
+  const expected = ["https://google.com/slug/1"]
+  const actual = getURLsFromHTML(inputBody,inputURL)
+  expect(actual).toEqual(expected)
+})
+test("getURLsFromHTML should return all urls", () => {
+    const inputURL = "https://google.com"
+  const inputBody = `<html>
+   <body>
+     <p>Paragraph</p>
+     <a href="/slug/1">Hello</a>
+     <a href="/slug/2">Hello 2</a>
+   </body>
+  </html>`
+  const expected = ["https://google.com/slug/1", "https://google.com/slug/2"]
+  const actual = getURLsFromHTML(inputBody, inputURL)
+  expect(actual).toEqual(expected)
+})
+test("getURLsFromHTML should ignore links without href", () => {
+  const inputURL = "https://google.com"
+  const inputBody = `<html>
+   <body>
+     <a href="/slug/1">Valid</a>
+     <a>No href</a>
+   </body>
+  </html>`
+  const expected = ["https://google.com/slug/1"]
+  const actual = getURLsFromHTML(inputBody,inputURL)
+  expect(actual).toEqual(expected)
+  
+})
+test("getURLsFromHTML should keep absolute links unchanged", () => {
+  const inputURL = "https://google.com"
+  const inputBody = `<html>
+   <body>
+     <a href="https://google.com/slug/1">Valid</a>
+
+   </body>
+  </html>`
+  const expected = ["https://google.com/slug/1"]
+   const actual = getURLsFromHTML(inputBody,inputURL)
+  expect(actual).toEqual(expected)
 })
