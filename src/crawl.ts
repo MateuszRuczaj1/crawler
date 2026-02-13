@@ -27,8 +27,33 @@ export async function getHTML(url: string) {
       throw new Error("Wrong content type! Unable to crawl")
    }
    const HTML = await response.text()
-   console.log(HTML)
+   return HTML
    } catch (error) {
       console.error(error)
    }
+}
+
+export async function crawlPage(baseURL: string, currentURL: string = baseURL, pages: Record<string, number> = {}){
+      const baseHost = new URL(baseURL).hostname
+      const curretHost = new URL(currentURL).hostname
+      if(baseHost !== curretHost) return pages
+      console.log(`[crawler] visiting: ${currentURL}`)
+      const normalizedCurrentUrl = normalizeURL(currentURL)
+      if(pages[normalizedCurrentUrl]){
+         pages[normalizedCurrentUrl]+=1
+         return pages
+      }
+      else{
+         pages[normalizedCurrentUrl] = 1
+      }
+      
+      const inputBody = await getHTML(currentURL)
+      const urls: string[] = getURLsFromHTML(inputBody!, baseURL) ?? [];
+      console.log(`[crawler] found ${urls.length} links on: ${currentURL}`)
+      for (const url of urls) {
+      console.log(`[crawler] queue -> ${url}`)
+      await crawlPage(baseURL, url, pages);
+     
+      }
+   return pages
 }

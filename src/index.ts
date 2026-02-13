@@ -1,4 +1,4 @@
-import { getHTML } from "./crawl"
+import { getHTML, crawlPage } from "./crawl"
 async function main(){
   const argv = process.argv
   const CLI_args = argv.slice(2)
@@ -11,7 +11,8 @@ async function main(){
   }
   else{
      console.log("Crawler is starting with URL: ", CLI_args[0])
-      await getHTML(CLI_args[0])
+      const pages = await crawlPage(CLI_args[0])
+      console.log("Crawler result:", pages)
      process.exit(0)
   }
 }
