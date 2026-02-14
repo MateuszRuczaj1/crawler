@@ -1,4 +1,7 @@
-class ConcurrentCrawler{
+import { normalizeURL } from "../crawl";
+import { getURLsFromHTML } from "../helpers";
+
+export class ConcurrentCrawler{
     baseURL: string;
     pages: Record<string, number>;
    limit: <T>(fn: () => Promise<T>) => Promise<T>
@@ -42,5 +45,32 @@ class ConcurrentCrawler{
           const html = await response.text()
           return html
        })
+    }
+    private async  crawlPage(baseURL: string, currentURL: string = baseURL, pages: Record<string, number> = {}){
+       if(!URL.canParse(currentURL)) return pages
+          const baseHost = new URL(baseURL).hostname
+          const curretHost = new URL(currentURL).hostname
+          if(baseHost !== curretHost) return pages
+          console.log(`[crawler] visiting: ${currentURL}`)
+          const normalizedCurrentUrl = normalizeURL(currentURL)
+          const seenBefore = this.addPageVisit(normalizedCurrentUrl)
+          if(seenBefore) return pages
+          
+               let inputBody = ""
+               try {
+                  inputBody = await this.getHTML(currentURL)
+               } catch (error) {
+                  console.error(`[crawler] skip ${currentURL}:`, error)
+                  return pages
+               }
+               const urls: string[] = getURLsFromHTML(inputBody, baseURL) ?? [];
+                console.log(`[crawler] found ${urls.length} links on: ${currentURL}`)
+               const tasks = urls.map((url) => this.crawlPage(baseURL, url, pages))
+               await Promise.allSettled(tasks)
+       return pages
+    }
+      public async crawl(): Promise<Record<string, number>>{
+         const pages = await this.crawlPage(this.baseURL, this.baseURL, this.pages)
+            return pages
     }
 }
