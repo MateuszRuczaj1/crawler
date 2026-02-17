@@ -17,7 +17,7 @@ export async function getHTML(url: string) {
       console.log(`[crawler] fetching: ${finalUrl}`)
       const response = await fetch(finalUrl,{
       headers:{
-         "User-Agent": "Spider-Man"
+         "User-Agent": "MyCrawler/1.0"
       }
    })
    console.log(`[crawler] response: ${response.status} ${response.statusText} (${finalUrl})`)

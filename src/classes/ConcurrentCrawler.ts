@@ -4,14 +4,30 @@ import { getURLsFromHTML } from "../helpers";
 export class ConcurrentCrawler{
     baseURL: string;
     pages: Record<string, number>;
+    maxPages: number;
+    shouldStop: boolean;
+    allTasks: Set<Promise<void>>
    limit: <T>(fn: () => Promise<T>) => Promise<T>
-   constructor(baseUrl: string, pages: Record<string, number>, limit: <T>(fn: () => Promise<T>) => Promise<T>){
+   constructor(baseUrl: string, pages: Record<string, number>, maxPages: number, shouldStop: boolean, allTasks: Set<Promise<void>>, limit: <T>(fn: () => Promise<T>) => Promise<T>){
         this.baseURL = baseUrl
         this.pages = pages
+        this.maxPages = maxPages
+        this.allTasks = allTasks
         this.limit = limit
+        this.shouldStop = shouldStop
     }
 
     private addPageVisit(normalizedURL: string): boolean{
+        if(this.shouldStop){
+            return false
+        }
+        else if(Object.keys(this.pages).length === this.maxPages){
+            this.shouldStop = true
+            console.log("Reached maximum number of pages to crawl")
+            // this.abortController.abort()
+            return false
+
+        }
         if(this.pages[normalizedURL]){
          this.pages[normalizedURL]+=1
          return true
@@ -46,7 +62,8 @@ export class ConcurrentCrawler{
           return html
        })
     }
-    private async  crawlPage(baseURL: string, currentURL: string = baseURL, pages: Record<string, number> = {}){
+    private async crawlPage(baseURL: string, currentURL: string = baseURL, pages: Record<string, number>  = {}){
+       if(this.shouldStop) return pages
        if(!URL.canParse(currentURL)) return pages
           const baseHost = new URL(baseURL).hostname
           const curretHost = new URL(currentURL).hostname
@@ -65,11 +82,18 @@ export class ConcurrentCrawler{
                }
                const urls: string[] = getURLsFromHTML(inputBody, baseURL) ?? [];
                 console.log(`[crawler] found ${urls.length} links on: ${currentURL}`)
-               const tasks = urls.map((url) => this.crawlPage(baseURL, url, pages))
+               const tasks: Promise<void>[] = urls.map((url) => {
+                  const task = this.crawlPage(baseURL, url, pages).then(() => undefined)
+                  this.allTasks.add(task)
+                  return task.finally(() => {
+                     this.allTasks.delete(task)
+                  })
+               })
+
                await Promise.allSettled(tasks)
        return pages
     }
-      public async crawl(): Promise<Record<string, number>>{
+      public async crawl(): Promise<Record<string, number> | void>{
          const pages = await this.crawlPage(this.baseURL, this.baseURL, this.pages)
             return pages
     }
