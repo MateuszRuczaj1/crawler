@@ -3,9 +3,9 @@ import { ConcurrentCrawler} from "./classes/ConcurrentCrawler"
 import pLimit from "p-limit"
 
 const argv = process.argv
-const limit = pLimit(3)
 const CLI_args = argv.slice(2)
 async function crawlSiteAsync(baseURL: string, maxConcurrency: number, maxPages: number) {
+const limit = pLimit(maxConcurrency)
 const concurrentCrawler = new ConcurrentCrawler(baseURL, {},maxPages,false, new Set(), limit)
   const pages = await concurrentCrawler.crawl()
   return pages
@@ -25,10 +25,19 @@ async function main(){
      console.log("Crawler is starting with URL: ", CLI_args[0])
     //   const pages = await crawlPage(CLI_args[0])
       const startedAt = Date.now()
-      const pages = await crawlSiteAsync(CLI_args[0], Number(CLI_args[1]), Number(CLI_args[2]))
+      const maxConcurrency = Number(CLI_args[1] ?? 3)
+      const maxPages = Number(CLI_args[2] ?? 25)
+      const pages = await crawlSiteAsync(CLI_args[0], maxConcurrency, maxPages)
       const endedAt = Date.now()
       const durationSeconds = ((endedAt - startedAt) / 1000).toFixed(2)
       console.log("Crawler result:", pages)
+      console.log("Finished crawling.");
+      if (pages) {
+      const firstPage = Object.values(pages)[0];
+      if (firstPage) {
+      console.log(`First page record: ${firstPage["url"]} - ${firstPage["h1"]}`);
+      }
+}
       console.log(`Execution time: ${durationSeconds}s`)
      process.exit(0)
   }
