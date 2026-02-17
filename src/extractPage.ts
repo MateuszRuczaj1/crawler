@@ -1,5 +1,5 @@
 import {getFirstParagraphFromHTML, getH1FromHTML, getImagesFromHTML, getURLsFromHTML} from "./helpers"
-interface ExtractedPageData {
+export interface ExtractedPageData {
     url: string,
     h1: string,
     first_paragraph: string,

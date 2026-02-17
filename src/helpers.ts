@@ -20,7 +20,7 @@ export function getFirstParagraphFromHTML(html:string):string{
     }
 
 }
-export function getURLsFromHTML(html:string, baseURL: string): string[] | undefined{
+export function getURLsFromHTML(html:string, baseURL: string): string[]{
     const dom = new JSDOM(html)
     const urls = dom.window.document.querySelectorAll("a")
     if(!urls) return []
@@ -28,13 +28,13 @@ export function getURLsFromHTML(html:string, baseURL: string): string[] | undefi
      urls.forEach((url) => {
         if(url.hasAttribute("href")){
             const href = url.getAttribute("href")
-            if(href?.startsWith(baseURL)){
-                links.push(href)
+            if(!href) return
+
+            const absoluteUrl = new URL(href, baseURL)
+            if(absoluteUrl.protocol !== "http:" && absoluteUrl.protocol !== "https:"){
+                return
             }
-            else{
-                const absoluteUrl = `${baseURL}${href}`
-                links.push(absoluteUrl)
-            }
+            links.push(absoluteUrl.toString())
         }
     })
     return links
